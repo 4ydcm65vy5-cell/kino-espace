@@ -26,7 +26,7 @@ input{width:100%;height:40px;margin:0 0 10px;border-radius:8px;border:1px solid 
 .tools{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;color:var(--muted);font-size:13px;gap:10px;flex-wrap:wrap}
 table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 th{text-align:left;font-size:12px;color:var(--muted);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line)}
-td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.06);color:#e8f6fb;vertical-align:top;font-size:14px}
+td{word-break:break-word;padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.06);color:#e8f6fb;vertical-align:top;font-size:14px}
 tr:last-child td{border-bottom:0}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
 .sub{display:block;color:var(--muted);font-size:12px}
@@ -90,13 +90,13 @@ h2{font-size:16px;color:var(--white);font-weight:600;margin:18px 0 8px}
     <div id="kinePane" class="hidden">
       <h2>En attente de validation</h2>
       <table>
-        <thead><tr><th>Kiné</th><th>Email</th><th class="hide-m">RPPS</th><th class="hide-m">Inscrit le</th><th></th></tr></thead>
+        <thead><tr><th>Kiné</th><th>Email</th><th class="hide-m">RPPS</th><th class="hide-m">Inscrit le</th></tr></thead>
         <tbody id="kPending"></tbody>
       </table>
       <div id="kPendingEmpty" class="empty hidden">Aucun compte en attente.</div>
       <h2>Comptes validés</h2>
       <table>
-        <thead><tr><th>Kiné</th><th>Email</th><th class="hide-m">RPPS</th><th class="hide-m">Ville</th><th></th></tr></thead>
+        <thead><tr><th>Kiné</th><th>Email</th><th class="hide-m">RPPS</th><th class="hide-m">Ville</th></tr></thead>
         <tbody id="kDone"></tbody>
       </table>
       <div id="kinesNote" class="empty hidden"></div>
@@ -161,10 +161,11 @@ async function loadKines() {
   $("kBadge").classList.toggle("hidden", pending.length === 0);
   $("kPendingEmpty").classList.toggle("hidden", pending.length > 0);
   $("kPending").innerHTML = pending.map((k) =>
-    "<tr><td>" + who(k) + "</td><td>" + esc(k.mail || k.email || "-") + '</td><td class="hide-m">' + esc(k.rpps || "-") + '</td><td class="hide-m">' + esc(fmtDate(k.created_at)) +
-    '</td><td><button class="val" data-valid="' + esc(k.id) + '">Valider</button></td></tr>').join("");
+    "<tr><td>" + who(k) + '<br><button class="val" data-valid="' + esc(k.id) + '" style="margin-top:6px">Valider</button></td><td>' + esc(k.mail || k.email || "-") +
+    '</td><td class="hide-m">' + esc(k.rpps || "-") + '</td><td class="hide-m">' + esc(fmtDate(k.created_at)) + "</td></tr>").join("");
   $("kDone").innerHTML = done.map((k) =>
-    "<tr><td>" + who(k) + "</td><td>" + esc(k.mail || k.email || "-") + '</td><td class="hide-m">' + esc(k.rpps || "-") + '</td><td class="hide-m">' + esc(k.ville || "-") + '</td><td><button class="rm" data-susp="' + esc(k.id) + '" data-who="' + who(k) + '">Mettre en attente</button></td></tr>').join("");
+    "<tr><td>" + who(k) + '<br><button class="rm" data-susp="' + esc(k.id) + '" data-who="' + who(k) + '" style="margin-top:4px">Mettre en attente</button></td><td>' + esc(k.mail || k.email || "-") +
+    '</td><td class="hide-m">' + esc(k.rpps || "-") + '</td><td class="hide-m">' + esc(k.ville || "-") + "</td></tr>").join("");
 }
 
 $("kPending").addEventListener("click", async (e) => {
