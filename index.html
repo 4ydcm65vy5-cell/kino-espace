@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Mon espace KINO</title>
+<style>
+:root{--bg:#071019;--card:#0c1a26;--line:rgba(255,255,255,.14);--txt:#c3d4dd;--white:#fff;--cyan:#29C8E8;--muted:#9bb0bd;--ok:#4edcb2;--warn:#ffd580;--bad:#ff5c74}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line)}
+.logo{color:var(--cyan);letter-spacing:3px;font-weight:600}
+.top button{background:none;border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:6px 14px;cursor:pointer;font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:20px}
+.login{max-width:340px;margin:60px auto;padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--card);text-align:center}
+.login h1{font-size:20px;color:var(--white);margin:0 0 4px;font-weight:600}
+.login p{font-size:13px;color:var(--muted);margin:0 0 16px}
+input{width:100%;height:40px;margin:0 0 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--white);padding:0 12px;font-size:14px}
+.go{width:100%;height:42px;border:0;border-radius:999px;background:var(--cyan);color:#071019;font-weight:600;font-size:15px;cursor:pointer}
+.err{color:var(--bad);font-size:13px;min-height:18px;margin:6px 0 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi small{display:block;color:var(--muted);font-size:12px}
+.kpi b{font-size:24px;color:var(--white);font-weight:600}
+.tools{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;color:var(--muted);font-size:13px;gap:10px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:500;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.06);color:#e8f6fb;vertical-align:top;font-size:14px}
+tr:last-child td{border-bottom:0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+.sub{display:block;color:var(--muted);font-size:12px}
+.pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid rgba(78,220,178,.5);color:var(--ok)}
+.pill.w{border-color:rgba(255,92,116,.5);color:var(--bad)}
+.name{cursor:pointer;border-bottom:1px dashed var(--muted)}
+.rm{background:none;border:0;color:var(--muted);cursor:pointer;font-size:12px;text-decoration:underline;padding:0}
+details summary{cursor:pointer;color:var(--muted);font-size:12px}
+details div{font-size:12px;color:var(--muted);word-break:break-all;margin-top:4px}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.hidden{display:none}
+@media(max-width:700px){.hide-m{display:none}}
+</style>
+</head>
+<body>
+<div class="top"><span class="logo">KINO</span><span id="who"></span></div>
+<main>
+  <section id="loginView" class="login hidden">
+    <h1>Mon espace KINO</h1>
+    <p>Connectez-vous avec votre compte</p>
+    <form id="loginForm">
+      <input id="email" type="email" placeholder="Email" autocomplete="username" required>
+      <input id="password" type="password" placeholder="Mot de passe" autocomplete="current-password" required>
+      <button class="go" type="submit">Se connecter</button>
+      <div id="loginErr" class="err"></div>
+    </form>
+  </section>
+
+  <section id="notAdminView" class="login hidden">
+    <h1>Bienvenue</h1>
+    <p>Votre espace est en cours de construction. Vous serez prévenu dès qu'il sera disponible.</p>
+  </section>
+
+  <section id="adminView" class="hidden">
+    <div class="kpis">
+      <div class="kpi"><small>PC enregistrés</small><b id="kTotal">-</b></div>
+      <div class="kpi"><small>KINO ouvert en ce moment</small><b id="kOpen">-</b></div>
+      <div class="kpi"><small id="kVerLabel">À jour</small><b id="kVer">-</b></div>
+      <div class="kpi"><small>Vidéos complètes</small><b id="kVid">-</b></div>
+    </div>
+    <div class="tools"><span id="updated"></span><span>Cliquez sur le nom d'un PC pour le renommer</span></div>
+    <table>
+      <thead><tr><th>PC</th><th>État</th><th>Version</th><th>Dernière connexion</th><th>Vidéos</th><th class="hide-m">Disque libre</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="empty" class="empty hidden">Aucun PC enregistré pour l'instant. Un PC apparaît ici dès qu'il lance KINO avec internet.</div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = "https://csroamdnrpcrhukshkgz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzcm9hbWRucnBjcmh1a3Noa2d6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTMzOTEsImV4cCI6MjA5MDYyOTM5MX0.jFagM2Qjvcrd0ClTeO7GtNws2cvezzgwoy4AxRd8Pq8";
+const ONLINE_MINUTES = 10; // un PC envoie un "bonjour" toutes les 5 min : au-dela de 10 min, KINO est considere ferme
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = (id) => document.getElementById(id);
+let timer = null;
+
+function show(view) {
+  for (const id of ["loginView", "notAdminView", "adminView"]) $(id).classList.toggle("hidden", id !== view);
+}
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function ago(iso) {
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 90) return "à l'instant";
+  const m = Math.round(s / 60); if (m < 60) return "il y a " + m + " min";
+  const h = Math.round(m / 60); if (h < 36) return "il y a " + h + " h";
+  return "il y a " + Math.round(h / 24) + " jours";
+}
+function cmpVer(a, b) {
+  const pa = String(a || "0").split(".").map(Number), pb = String(b || "0").split(".").map(Number);
+  for (let i = 0; i < 4; i++) { const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d; }
+  return 0;
+}
+
+async function loadDevices() {
+  const res = await sb.from("pc_devices").select("*").order("last_seen", { ascending: false });
+  if (res.error) { $("updated").textContent = "Impossible de lire les PC."; return; }
+  const list = res.data || [];
+  const now = Date.now();
+  const open = (d) => now - new Date(d.last_seen).getTime() < ONLINE_MINUTES * 60 * 1000;
+  const latest = list.reduce((v, d) => (cmpVer(d.app_version, v) > 0 ? d.app_version : v), "0");
+  const upToDate = list.filter((d) => cmpVer(d.app_version, latest) === 0).length;
+  const complete = list.filter((d) => d.videos_total != null && d.videos_have === d.videos_total).length;
+  $("kTotal").textContent = list.length;
+  $("kOpen").textContent = list.filter(open).length;
+  $("kVerLabel").textContent = list.length ? "À jour (" + latest + ")" : "À jour";
+  $("kVer").textContent = upToDate + " sur " + list.length;
+  $("kVid").textContent = complete + " sur " + list.length;
+  $("empty").classList.toggle("hidden", list.length > 0);
+  $("rows").innerHTML = list.map((d) => {
+    const on = open(d);
+    const dot = on ? "var(--ok)" : (now - new Date(d.last_seen).getTime() < 7 * 864e5 ? "var(--warn)" : "#7a8a94");
+    const full = d.videos_total != null && d.videos_have === d.videos_total;
+    const missing = Array.isArray(d.videos_missing) ? d.videos_missing : [];
+    let vid = "-";
+    if (d.videos_total != null) {
+      vid = '<span class="pill ' + (full ? "" : "w") + '">' + d.videos_have + " / " + d.videos_total + "</span>";
+      if (missing.length) vid += "<details><summary>manque " + missing.length + " vidéo" + (missing.length > 1 ? "s" : "") + "</summary><div>" + missing.map(esc).join("<br>") + "</div></details>";
+    }
+    const old = cmpVer(d.app_version, latest) < 0 ? '<span class="sub" style="color:var(--warn)">pas à jour</span>' : "";
+    return "<tr>" +
+      '<td><span class="name" data-id="' + esc(d.device_id) + '" data-name="' + esc(d.name || "") + '">' + esc(d.name || "PC sans nom") + '</span><span class="sub">' + esc(d.device_id.slice(0, 8)) + " · " + esc(d.os || "") + "</span></td>" +
+      '<td><span class="dot" style="background:' + dot + '"></span>' + (on ? "KINO ouvert" : "Fermé") + "</td>" +
+      "<td>" + esc(d.app_version || "-") + old + "</td>" +
+      "<td>" + esc(ago(d.last_seen)) + "</td>" +
+      "<td>" + vid + "</td>" +
+      '<td class="hide-m">' + (d.disk_free_gb != null ? esc(d.disk_free_gb) + " Go" : "-") + "</td>" +
+      '<td><button class="rm" data-del="' + esc(d.device_id) + '">Retirer</button></td>' +
+      "</tr>";
+  }).join("");
+  $("updated").textContent = "Mis à jour à " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " (rafraîchi toutes les 30 s)";
+}
+
+$("rows").addEventListener("click", async (e) => {
+  const name = e.target.closest(".name");
+  if (name) {
+    const next = prompt("Nom de ce PC (par exemple « Cabinet Lyon ») :", name.dataset.name || "");
+    if (next === null) return;
+    await sb.from("pc_devices").update({ name: next.trim() || null }).eq("device_id", name.dataset.id);
+    loadDevices();
+    return;
+  }
+  const del = e.target.closest("[data-del]");
+  if (del && confirm("Retirer ce PC de la liste ? (il réapparaîtra s'il relance KINO avec internet)")) {
+    await sb.from("pc_devices").delete().eq("device_id", del.dataset.del);
+    loadDevices();
+  }
+});
+
+async function route(session) {
+  clearInterval(timer);
+  if (!session) { $("who").innerHTML = ""; show("loginView"); return; }
+  $("who").innerHTML = '<span style="font-size:13px;color:var(--muted);margin-right:10px">' + esc(session.user.email) + '</span><button id="out">Se déconnecter</button>';
+  $("out").onclick = () => sb.auth.signOut();
+  const res = await sb.from("admins").select("user_id").eq("user_id", session.user.id).maybeSingle();
+  if (!res.data) { show("notAdminView"); return; }
+  show("adminView");
+  loadDevices();
+  timer = setInterval(loadDevices, 30000);
+}
+
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("loginErr").textContent = "";
+  const res = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+  if (res.error) $("loginErr").textContent = "Email ou mot de passe incorrect.";
+});
+
+sb.auth.onAuthStateChange((_event, session) => route(session));
+sb.auth.getSession().then((r) => route(r.data.session));
+</script>
+</body>
+</html>
