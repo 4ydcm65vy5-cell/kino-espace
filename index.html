@@ -96,7 +96,7 @@ h2{font-size:16px;color:var(--white);font-weight:600;margin:18px 0 8px}
       <div id="kPendingEmpty" class="empty hidden">Aucun compte en attente.</div>
       <h2>Comptes validés</h2>
       <table>
-        <thead><tr><th>Kiné</th><th>Email</th><th class="hide-m">RPPS</th><th class="hide-m">Ville</th></tr></thead>
+        <thead><tr><th>Kiné</th><th>Email</th><th class="hide-m">RPPS</th><th class="hide-m">Ville</th><th></th></tr></thead>
         <tbody id="kDone"></tbody>
       </table>
       <div id="kinesNote" class="empty hidden"></div>
@@ -164,7 +164,7 @@ async function loadKines() {
     "<tr><td>" + who(k) + "</td><td>" + esc(k.mail || k.email || "-") + '</td><td class="hide-m">' + esc(k.rpps || "-") + '</td><td class="hide-m">' + esc(fmtDate(k.created_at)) +
     '</td><td><button class="val" data-valid="' + esc(k.id) + '">Valider</button></td></tr>').join("");
   $("kDone").innerHTML = done.map((k) =>
-    "<tr><td>" + who(k) + "</td><td>" + esc(k.mail || k.email || "-") + '</td><td class="hide-m">' + esc(k.rpps || "-") + '</td><td class="hide-m">' + esc(k.ville || "-") + "</td></tr>").join("");
+    "<tr><td>" + who(k) + "</td><td>" + esc(k.mail || k.email || "-") + '</td><td class="hide-m">' + esc(k.rpps || "-") + '</td><td class="hide-m">' + esc(k.ville || "-") + '</td><td><button class="rm" data-susp="' + esc(k.id) + '" data-who="' + who(k) + '">Mettre en attente</button></td></tr>').join("");
 }
 
 $("kPending").addEventListener("click", async (e) => {
@@ -173,6 +173,16 @@ $("kPending").addEventListener("click", async (e) => {
   b.disabled = true;
   const res = await sb.from("kines").update({ valide: true }).eq("id", b.dataset.valid);
   if (res.error) { alert("Impossible de valider ce compte."); b.disabled = false; return; }
+  loadKines();
+});
+
+$("kDone").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-susp]");
+  if (!b) return;
+  if (!confirm("Mettre " + b.dataset.who + " en attente ? Il ne pourra plus utiliser KINO tant que vous ne l'aurez pas validé à nouveau.")) return;
+  b.disabled = true;
+  const res = await sb.from("kines").update({ valide: false }).eq("id", b.dataset.susp);
+  if (res.error) { alert("Impossible de mettre ce compte en attente."); b.disabled = false; return; }
   loadKines();
 });
 
